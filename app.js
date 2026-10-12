@@ -1,30 +1,41 @@
 const app = document.getElementById('app');
+
 let state = {
-  mode: null, // '1v1', '2v2', '3p'
-  players: [],
-  currentIndex: 0,
+  mode: null,
+  teams: [], // [{ name, players: [{name}], score, strikes, throws, points, lastShots: [] }]
+  currentTeam: 0,
   history: [],
   gameOver: false,
   winner: null,
-  wins: { 0: 0, 1: 0 }, // for rematch tally (sides)
+  wins: [0, 0],
   rematchActive: false,
-  dark: false
+  dark: false,
+  savedPlayers: JSON.parse(localStorage.getItem('finskaPlayers') || '[]')
 };
 
 function saveState() {
-  localStorage.setItem('saffaFrenchFinska', JSON.stringify(state));
+  localStorage.setItem('saffaFrenchFinska', JSON.stringify({
+    mode: state.mode, teams: state.teams, currentTeam: state.currentTeam,
+    history: state.history, gameOver: state.gameOver, winner: state.winner,
+    wins: state.wins, rematchActive: state.rematchActive, dark: state.dark
+  }));
+  localStorage.setItem('finskaPlayers', JSON.stringify(state.savedPlayers));
 }
 
 function loadState() {
   const saved = localStorage.getItem('saffaFrenchFinska');
   if (saved) {
-    try { state = JSON.parse(saved); } catch(e) {}
+    try {
+      const s = JSON.parse(saved);
+      Object.assign(state, s);
+    } catch(e) {}
   }
+  state.savedPlayers = JSON.parse(localStorage.getItem('finskaPlayers') || '[]');
 }
 
 function render() {
   document.body.classList.toggle('dark', state.dark);
-  if (!state.mode) {
+  if (!state.mode || state.gameOver && !state.rematchActive) {
     renderHome();
   } else if (state.gameOver) {
     renderEnd();
@@ -34,64 +45,103 @@ function render() {
 }
 
 function renderHome() {
+  const hasGame = state.teams && state.teams.length > 0 && !state.gameOver;
   app.innerHTML = `
     <div class="screen">
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-      <div class="logo">SaffaFrench<br>Finska</div>
-      <button class="btn" onclick="startSetup('1v1')">PLAY 1v1</button>
-      <button class="btn" onclick="startSetup('2v2')">PLAY 2v2</button>
-      <button class="btn" onclick="startSetup('3p')">3 PLAYERS</button>
-      <button class="btn" onclick="showRules()">RULES</button>
+      <div class="title" style="color:var(--french-blue); font-size:42px;">SaffaFrench<br>Finska</div>
+      <div class="subtitle">Keep track of your games!</div>
+      <div class="pins-container">
+        <div class="pins">
+          <div class="pin-row"><div class="pin">7</div><div class="pin" style="border-color:var(--sa-gold)">9</div><div class="pin">8</div></div>
+          <div class="pin-row"><div class="pin">5</div><div class="pin" style="border-color:var(--sa-green)">11</div><div class="pin" style="border-color:var(--sa-gold)">12</div><div class="pin">6</div></div>
+          <div class="pin-row"><div class="pin" style="border-color:var(--sa-green)">3</div><div class="pin">10</div><div class="pin" style="border-color:var(--sa-gold)">4</div></div>
+          <div class="pin-row"><div class="pin" style="border-color:var(--sa-green)">1</div><div class="pin" style="border-color:var(--sa-gold)">2</div></div>
+        </div>
+      </div>
+      <div class="bottom-buttons">
+        ${hasGame ? '<button class="btn" onclick="continueGame()">CONTINUE GAME</button>' : ''}
+        <button class="btn" onclick="newGame()">NEW GAME</button>
+      </div>
     </div>
   `;
 }
 
-function startSetup(mode) {
-  state.mode = mode;
-  state.players = [];
-  state.currentIndex = 0;
+function continueGame() {
+  if (state.teams.length) render();
+}
+
+function newGame() {
+  state.mode = 'teams';
+  state.teams = [
+    { name: 'Team 1', players: [], score: 0, strikes: 0, throws: 0, points: [], lastShots: [] },
+    { name: 'Team 2', players: [], score: 0, strikes: 0, throws: 0, points: [], lastShots: [] }
+  ];
+  state.currentTeam = 0;
   state.history = [];
   state.gameOver = false;
   state.winner = null;
   state.rematchActive = false;
-  // wins persist only during rematch chain
-  if (!state.rematchActive) state.wins = { 0: 0, 1: 0 };
+  state.wins = [0, 0];
+  renderTeamSetup();
+}
 
-  let labels = [];
-  if (mode === '1v1') labels = ['Player 1', 'Player 2'];
-  else if (mode === '2v2') labels = ['Team 1 Player A', 'Team 1 Player B', 'Team 2 Player A', 'Team 2 Player B'];
-  else labels = ['Player 1', 'Player 2', 'Player 3'];
-
+function renderTeamSetup() {
   app.innerHTML = `
     <div class="screen">
-      <div class="header">
-        <button class="back" onclick="resetToHome()">←</button>
-        <span>Setup</span>
+      <div class="header-icons">
+        <button class="icon-btn" onclick="renderHome()">←</button>
+        <span style="font-weight:700">Setup Teams</span>
         <span></span>
       </div>
-      <h2 style="text-align:center; margin:20px 0;">Enter Names</h2>
-      ${labels.map((l, i) => `
-        <div class="input-group">
-          <label>${l}</label>
-          <input id="name${i}" placeholder="${l}" value="${l.split(' ')[0]}">
+      ${state.teams.map((team, ti) => `
+        <h3 style="margin:16px 0 8px;">${team.name}</h3>
+        <div class="player-list" id="plist${ti}">
+          ${team.players.map((p, pi) => `
+            <div class="player-item">
+              <span>${p.name}</span>
+              <button onclick="removePlayer(${ti},${pi})">✕</button>
+            </div>
+          `).join('')}
+        </div>
+        <div class="add-player">
+          <input id="newp${ti}" placeholder="Add player name" list="savedPlayers">
+          <button onclick="addPlayer(${ti})">Add</button>
         </div>
       `).join('')}
-      <button class="btn primary" onclick="startGame()">START GAME</button>
+      <datalist id="savedPlayers">
+        ${state.savedPlayers.map(n => `<option value="${n}">`).join('')}
+      </datalist>
+      <button class="btn primary" onclick="startGame()" style="margin-top:20px;">START GAME</button>
     </div>
   `;
 }
 
+function addPlayer(ti) {
+  const input = document.getElementById('newp' + ti);
+  const name = input.value.trim();
+  if (!name) return;
+  state.teams[ti].players.push({ name });
+  if (!state.savedPlayers.includes(name)) {
+    state.savedPlayers.push(name);
+  }
+  input.value = '';
+  saveState();
+  renderTeamSetup();
+}
+
+function removePlayer(ti, pi) {
+  state.teams[ti].players.splice(pi, 1);
+  saveState();
+  renderTeamSetup();
+}
+
 function startGame() {
-  const inputs = app.querySelectorAll('input');
-  state.players = Array.from(inputs).map((inp, i) => ({
-    name: inp.value || `Player ${i+1}`,
-    score: 0,
-    strikes: 0,
-    throws: 0,
-    points: [],
-    side: state.mode === '2v2' ? Math.floor(i / 2) : i
-  }));
-  state.currentIndex = 0;
+  // ensure at least one player per team
+  state.teams.forEach(t => {
+    if (t.players.length === 0) t.players.push({ name: t.name });
+  });
+  state.currentTeam = 0;
   state.history = [];
   state.gameOver = false;
   saveState();
@@ -99,188 +149,137 @@ function startGame() {
 }
 
 function renderGame() {
-  const current = state.players[state.currentIndex];
-  const sides = getSides();
-
-  let tallyHtml = '';
-  if (state.rematchActive && state.mode !== '3p') {
-    tallyHtml = `<div class="tally">Wins: ${sides[0].name || 'Side A'} ${state.wins[0]} – ${state.wins[1]} ${sides[1].name || 'Side B'}</div>`;
+  const teams = state.teams;
+  let tally = '';
+  if (state.rematchActive) {
+    tally = `<div class="tally">Series: ${teams[0].name} ${state.wins[0]} – ${state.wins[1]} ${teams[1].name}</div>`;
   }
-
   app.innerHTML = `
     <div class="screen">
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-      <div class="header">
-        <button class="back" onclick="resetToHome()">←</button>
+      <div class="header-icons">
+        <button class="icon-btn" onclick="showMenu()">☰</button>
         <span></span>
-        <button class="undo" onclick="undo()">Undo</button>
+        <div>
+          <button class="icon-btn" onclick="editNames()">✎</button>
+          <button class="icon-btn" onclick="undo()">↩</button>
+        </div>
       </div>
-      ${tallyHtml}
-      <div class="scores">
-        ${sides.map((s, idx) => `
-          <div class="score-block">
-            <div class="score ${idx === getCurrentSide() ? 'active' : ''}">${s.score}</div>
-            <div class="name">${s.displayName}</div>
-            ${s.subNames ? `<div class="name sub">${s.subNames}</div>` : ''}
-            ${s.strikes > 0 ? `<div class="strike">${'⊘'.repeat(s.strikes)}</div>` : ''}
-          </div>
-        `).join('')}
+      ${tally}
+      <div class="scores-row">
+        ${teams.map((t, i) => {
+          const isActive = i === state.currentTeam;
+          const missHtml = t.strikes > 0 ? `<div class="strikes" style="color:#e53935; font-size:22px; margin:6px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
+          const playerName = t.players && t.players.length ? t.players[0].name : t.name;
+          return `
+          <div class="score-card ${isActive ? 'active' : ''}">
+            <div class="score">${t.score}</div>
+            <div class="last-shots">Last Shots</div>
+            ${missHtml}
+            ${isActive ? `<div style="font-size:22px; font-weight:700; margin:8px 0;">${playerName}</div>` : ''}
+            <div class="team-name">${t.name}</div>
+          </div>`;
+        }).join('')}
       </div>
       <div class="numpad">
         <div class="numpad-grid">
           ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n => `<button class="num-btn" onclick="score(${n})">${n}</button>`).join('')}
         </div>
-        <button class="strike-btn" onclick="score(0)">STRIKE</button>
+        <button class="miss-btn" onclick="score(0)">MISS</button>
       </div>
     </div>
   `;
 }
 
-function getSides() {
-  if (state.mode === '2v2') {
-    const t1 = state.players.filter(p => p.side === 0);
-    const t2 = state.players.filter(p => p.side === 1);
-    return [
-      { score: t1.reduce((a,p)=>a+p.score,0), displayName: t1[0].name, subNames: t1[1]?.name, strikes: t1[0].strikes, side: 0 },
-      { score: t2.reduce((a,p)=>a+p.score,0), displayName: t2[0].name, subNames: t2[1]?.name, strikes: t2[0].strikes, side: 1 }
-    ];
-  }
-  return state.players.map(p => ({ score: p.score, displayName: p.name, strikes: p.strikes, side: p.side }));
-}
-
-function getCurrentSide() {
-  return state.players[state.currentIndex].side;
-}
-
 function score(points) {
   if (state.gameOver) return;
-  const p = state.players[state.currentIndex];
-  const oldScore = p.score;
-  const oldStrikes = p.strikes;
-
-  state.history.push(JSON.parse(JSON.stringify(state.players)));
-
-  p.throws++;
-  p.points.push(points);
+  const team = state.teams[state.currentTeam];
+  state.history.push(JSON.parse(JSON.stringify(state.teams)));
+  team.throws++;
+  team.points.push(points);
+  team.lastShots = team.lastShots.slice(-2).concat(points);
 
   if (points === 0) {
-    p.strikes++;
-    if (p.strikes >= 3) {
-      eliminate(p);
+    team.strikes++;
+    if (team.strikes >= 3) {
+      eliminate(state.currentTeam);
       return;
     }
   } else {
-    p.strikes = 0;
-    let newScore = p.score + points;
-    if (newScore > 50) newScore = 25;
-    p.score = newScore;
-    if (p.score === 50) {
-      win(p);
+    team.strikes = 0;
+    let ns = team.score + points;
+    if (ns > 50) ns = 25;
+    team.score = ns;
+    if (team.score === 50) {
+      win(state.currentTeam);
       return;
     }
   }
-
-  // next player
-  state.currentIndex = (state.currentIndex + 1) % state.players.length;
-  // skip eliminated if any
-  while (state.players[state.currentIndex].eliminated) {
-    state.currentIndex = (state.currentIndex + 1) % state.players.length;
-  }
+  state.currentTeam = (state.currentTeam + 1) % state.teams.length;
   saveState();
   render();
 }
 
-function eliminate(p) {
-  p.eliminated = true;
-  // check if only one left
-  const active = state.players.filter(pl => !pl.eliminated);
+function eliminate(idx) {
+  state.teams[idx].eliminated = true;
+  const active = state.teams.filter(t => !t.eliminated);
   if (active.length <= 1) {
-    if (active.length === 1) win(active[0]);
+    if (active.length === 1) win(state.teams.indexOf(active[0]));
     else endGame(null);
   } else {
-    state.currentIndex = (state.currentIndex + 1) % state.players.length;
-    while (state.players[state.currentIndex].eliminated) {
-      state.currentIndex = (state.currentIndex + 1) % state.players.length;
+    state.currentTeam = (state.currentTeam + 1) % state.teams.length;
+    while (state.teams[state.currentTeam].eliminated) {
+      state.currentTeam = (state.currentTeam + 1) % state.teams.length;
     }
     saveState();
     render();
   }
 }
 
-function win(p) {
+function win(idx) {
   state.gameOver = true;
-  state.winner = p;
-  // update wins tally for rematch
-  if (state.mode !== '3p') {
-    const side = p.side;
-    state.wins[side] = (state.wins[side] || 0) + 1;
-  }
+  state.winner = idx;
+  state.wins[idx]++;
   saveState();
-  render();
+  renderEnd();
 }
 
-function endGame(winner) {
+function endGame() {
   state.gameOver = true;
-  state.winner = winner;
   saveState();
-  render();
+  renderEnd();
 }
 
 function undo() {
-  if (state.history.length === 0) return;
-  state.players = state.history.pop();
-  // find current
+  if (!state.history.length) return;
+  state.teams = state.history.pop();
   state.gameOver = false;
   saveState();
   render();
 }
 
 function renderEnd() {
-  const sides = getSides();
-  let title = state.winner ? 'VICTORY!' : 'DISQUALIFIED';
-  let tallyHtml = '';
-  if (state.rematchActive && state.mode !== '3p') {
-    tallyHtml = `<div class="tally">Series: ${state.wins[0]} – ${state.wins[1]}</div>`;
-  }
-
-  // simple stats
-  const stats = state.players.map(p => {
-    const avg = p.throws ? (p.score / p.throws).toFixed(1) : '0.0';
-    return { name: p.name, score: p.score, avg, strikes: p.strikes };
-  }).sort((a,b) => b.score - a.score);
-
+  const w = state.winner !== null ? state.teams[state.winner] : null;
   app.innerHTML = `
-    <div class="screen">
-      <div class="victory">
-        <h1>${title}</h1>
-        ${tallyHtml}
-        <div class="scores">
-          ${sides.map(s => `<div class="score-block"><div class="score">${s.score}</div><div class="name">${s.displayName}</div></div>`).join('')}
-        </div>
-      </div>
-      <div class="stats">
-        <h3 style="text-align:center; margin-bottom:10px;">MATCH STATS</h3>
-        <table>
-          <tr><th>#</th><th>Name</th><th>Score</th><th>Avg</th><th>Strikes</th></tr>
-          ${stats.map((s,i) => `<tr><td class="rank">${i+1}</td><td>${s.name}</td><td>${s.score}</td><td>${s.avg}</td><td>${s.strikes}</td></tr>`).join('')}
-        </table>
+    <div class="screen" style="text-align:center;">
+      <h1 style="font-size:36px; margin:40px 0 10px;">${w ? 'VICTORY!' : 'GAME OVER'}</h1>
+      ${state.rematchActive ? `<div class="tally">Series: ${state.wins[0]} – ${state.wins[1]}</div>` : ''}
+      <div class="scores-row" style="margin-top:20px;">
+        ${state.teams.map(t => `<div class="score-card"><div class="score">${t.score}</div><div class="team-name">${t.name}</div></div>`).join('')}
       </div>
       <button class="btn primary" onclick="rematch()">REMATCH</button>
-      <button class="btn" onclick="resetToHome()">MAIN MENU</button>
+      <button class="btn" onclick="newGame()">NEW GAME</button>
+      <button class="btn" onclick="renderHome()">MAIN MENU</button>
     </div>
   `;
 }
 
 function rematch() {
   state.rematchActive = true;
-  state.players.forEach(p => {
-    p.score = 0;
-    p.strikes = 0;
-    p.throws = 0;
-    p.points = [];
-    p.eliminated = false;
+  state.teams.forEach(t => {
+    t.score = 0; t.strikes = 0; t.throws = 0; t.points = []; t.lastShots = []; t.eliminated = false;
   });
-  state.currentIndex = 0;
+  state.currentTeam = 0;
   state.history = [];
   state.gameOver = false;
   state.winner = null;
@@ -288,36 +287,20 @@ function rematch() {
   render();
 }
 
-function resetToHome() {
-  state.mode = null;
-  state.rematchActive = false;
-  state.wins = { 0: 0, 1: 0 };
-  saveState();
-  render();
+function showMenu() {
+  if (confirm('Return to main menu? Current game will be saved.')) {
+    renderHome();
+  }
 }
 
-function showRules() {
-  const modal = document.createElement('div');
-  modal.className = 'modal';
-  modal.innerHTML = `
-    <div class="modal-content">
-      <button class="close" onclick="this.closest('.modal').remove()">×</button>
-      <h2 style="text-align:center;">HOW TO PLAY<br><span style="font-size:28px;">finska</span></h2>
-      <div class="pins">
-        <div class="pin-row"><div class="pin">7</div><div class="pin">9</div><div class="pin">8</div></div>
-        <div class="pin-row"><div class="pin">5</div><div class="pin">11</div><div class="pin">12</div><div class="pin">6</div></div>
-        <div class="pin-row"><div class="pin">3</div><div class="pin">10</div><div class="pin">4</div></div>
-        <div class="pin-row"><div class="pin">1</div><div class="pin">2</div></div>
-      </div>
-      <p>Finska can be played as a 1v1, 2v2 or 3 players.</p>
-      <p style="margin-top:12px;">To start, all 12 pins are arranged as shown above.</p>
-      <p style="margin-top:12px;"><strong>The goal is to reach exactly 50 points.</strong><br>Any player or team that exceeds 50 points gets their score back to 25.</p>
-      <p style="margin-top:12px;">Players take turns throwing the finska (throwing stick) at the pins behind a line placed 3–4 metres from the pins.</p>
-      <p style="margin-top:12px;">Single pin = the number on the pin.<br>Multiple pins = 1 point per pin.</p>
-      <p style="margin-top:12px;">Three consecutive misses (strikes) eliminate the player/team.</p>
-    </div>
-  `;
-  document.body.appendChild(modal);
+function editNames() {
+  // simple prompt edit
+  state.teams.forEach((t, i) => {
+    const n = prompt(`Team ${i+1} name:`, t.name);
+    if (n) t.name = n;
+  });
+  saveState();
+  render();
 }
 
 function toggleTheme() {
@@ -326,16 +309,24 @@ function toggleTheme() {
   render();
 }
 
+function showRules() {
+  alert('Finska: Reach exactly 50. Over 50 resets to 25. 3 misses = out.\nPins: single = number, multiple = count.');
+}
+
 // init
 loadState();
 render();
 
-// expose for onclick
-window.startSetup = startSetup;
+// expose
+window.continueGame = continueGame;
+window.newGame = newGame;
+window.addPlayer = addPlayer;
+window.removePlayer = removePlayer;
 window.startGame = startGame;
 window.score = score;
 window.undo = undo;
 window.rematch = rematch;
-window.resetToHome = resetToHome;
-window.showRules = showRules;
+window.renderHome = renderHome;
 window.toggleTheme = toggleTheme;
+window.showMenu = showMenu;
+window.editNames = editNames;

@@ -1,5 +1,0 @@
-name = "saffa-french-finska"
-compatibility_date = "2024-01-01"
-
-# For Cloudflare Pages static site
-# Deploy with: npx wrangler pages deploy .
