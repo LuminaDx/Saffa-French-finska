@@ -146,7 +146,6 @@ function startGame() {
   state.teams.forEach(t => {
     if (t.players.length === 0) t.players.push({ name: t.name });
   });
-  // Random starting team + random player on that team
   state.currentTeam = Math.floor(Math.random() * state.teams.length);
   state.playerIndex = state.teams.map(t => Math.floor(Math.random() * Math.max(1, t.players.length)));
   state.history = [];
@@ -218,9 +217,10 @@ function score(points) {
   state.history.push(JSON.parse(JSON.stringify({
     teams: state.teams,
     currentTeam: state.currentTeam,
-    playerIndex: state.playerIndex
+    playerIndex: [...state.playerIndex]
   })));
 
+  // Score goes ONLY to the current (green) team
   team.throws++;
   team.points.push(points);
   team.lastShots = (team.lastShots || []).slice(-2).concat(points);
@@ -242,6 +242,7 @@ function score(points) {
     }
   }
 
+  // After scoring, advance this team's player then switch teams
   if (team.players.length) {
     state.playerIndex[ti] = (state.playerIndex[ti] + 1) % team.players.length;
   }
@@ -317,7 +318,6 @@ function rematch() {
   state.teams.forEach(t => {
     t.score = 0; t.strikes = 0; t.throws = 0; t.points = []; t.lastShots = []; t.eliminated = false;
   });
-  // Losing team starts; random player from that team
   const loser = state.winner === 0 ? 1 : 0;
   state.currentTeam = loser;
   state.playerIndex = state.teams.map(t => Math.floor(Math.random() * Math.max(1, t.players.length)));
