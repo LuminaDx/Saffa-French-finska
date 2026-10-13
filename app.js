@@ -2,14 +2,13 @@ const app = document.getElementById('app');
 
 let state = {
   mode: null,
-  teams: [], // [{ name, players: [{name}], score, strikes, throws, points, lastShots: [] }]
+  teams: [],
   currentTeam: 0,
   history: [],
   gameOver: false,
   winner: null,
-  wins: [0, 0],
+  wins: [],
   rematchActive: false,
-  dark: false,
   savedPlayers: JSON.parse(localStorage.getItem('finskaPlayers') || '[]')
 };
 
@@ -17,7 +16,7 @@ function saveState() {
   localStorage.setItem('saffaFrenchFinska', JSON.stringify({
     mode: state.mode, teams: state.teams, currentTeam: state.currentTeam,
     history: state.history, gameOver: state.gameOver, winner: state.winner,
-    wins: state.wins, rematchActive: state.rematchActive, dark: state.dark
+    wins: state.wins, rematchActive: state.rematchActive
   }));
   localStorage.setItem('finskaPlayers', JSON.stringify(state.savedPlayers));
 }
@@ -34,8 +33,7 @@ function loadState() {
 }
 
 function render() {
-  document.body.classList.toggle('dark', state.dark);
-  if (!state.mode || state.gameOver && !state.rematchActive) {
+  if (!state.mode || (state.gameOver && !state.rematchActive)) {
     renderHome();
   } else if (state.gameOver) {
     renderEnd();
@@ -48,8 +46,7 @@ function renderHome() {
   const hasGame = state.teams && state.teams.length > 0 && !state.gameOver;
   app.innerHTML = `
     <div class="screen">
-      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
-      <div class="title" style="color:var(--french-blue); font-size:42px;">SaffaFrench<br>Finska</div>
+      <div class="title" style="color:var(--french-blue); font-size:42px; line-height:1.1;">SaffaFrench<br>Finska</div>
       <div class="subtitle">Keep track of your games!</div>
       <div class="pins-container">
         <div class="pins">
@@ -82,7 +79,7 @@ function newGame() {
   state.gameOver = false;
   state.winner = null;
   state.rematchActive = false;
-  state.wins = [0, 0];
+  state.wins = [];
   renderTeamSetup();
 }
 
@@ -91,28 +88,31 @@ function renderTeamSetup() {
     <div class="screen">
       <div class="header-icons">
         <button class="icon-btn" onclick="renderHome()">←</button>
-        <span style="font-weight:700">Setup Teams</span>
+        <span style="font-weight:700; font-size:20px;">Setup Teams</span>
         <span></span>
       </div>
       ${state.teams.map((team, ti) => `
-        <h3 style="margin:16px 0 8px;">${team.name}</h3>
-        <div class="player-list" id="plist${ti}">
-          ${team.players.map((p, pi) => `
-            <div class="player-item">
-              <span>${p.name}</span>
-              <button onclick="removePlayer(${ti},${pi})">✕</button>
-            </div>
-          `).join('')}
-        </div>
-        <div class="add-player">
-          <input id="newp${ti}" placeholder="Add player name" list="savedPlayers">
-          <button onclick="addPlayer(${ti})">Add</button>
+        <div style="margin:20px 0; padding:12px; border:1.5px solid var(--sa-gold); border-radius:12px;">
+          <h3 style="margin:0 0 10px; color:var(--french-blue);">${team.name}</h3>
+          <div class="player-list">
+            ${team.players.map((p, pi) => `
+              <div class="player-item">
+                <span>👤 ${p.name}</span>
+                <button onclick="removePlayer(${ti},${pi})" style="background:none;border:none;font-size:18px;">✕</button>
+              </div>
+            `).join('')}
+          </div>
+          <div class="add-player" style="display:flex;gap:8px;margin-top:8px;">
+            <input id="newp${ti}" placeholder="Add player name" list="savedPlayers" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;">
+            <button onclick="addPlayer(${ti})" style="padding:10px 16px;background:var(--french-blue);color:#fff;border:none;border-radius:8px;">Add</button>
+          </div>
         </div>
       `).join('')}
       <datalist id="savedPlayers">
         ${state.savedPlayers.map(n => `<option value="${n}">`).join('')}
       </datalist>
-      <button class="btn primary" onclick="startGame()" style="margin-top:20px;">START GAME</button>
+      ${state.teams.length < 6 ? `<button class="btn" onclick="addTeam()" style="margin:10px 0;">+ Add New Team</button>` : ''}
+      <button class="btn primary" onclick="startGame()" style="margin-top:16px;background:var(--sa-green);border-color:var(--sa-green);">START GAME</button>
     </div>
   `;
 }
@@ -130,7 +130,13 @@ function addPlayer(ti) {
   renderTeamSetup();
 }
 
-function removePlayer(ti, pi) {
+function addTeam() {
+  if (state.teams.length >= 6) return;
+  const n = state.teams.length + 1;
+  state.teams.push({ name: 'Team ' + n, players: [], score: 0, strikes: 0, throws: 0, points: [], lastShots: [] });
+  saveState();
+  renderTeamSetup();
+}
   state.teams[ti].players.splice(pi, 1);
   saveState();
   renderTeamSetup();
@@ -149,6 +155,86 @@ function startGame() {
 }
 
 function renderGame() {
+  const teams = state.teams;
+  let tally = '';
+  if (state.rematchActive && state.wins.length) {
+    tally = `<div class="tally">Series: ${state.wins.map((w,i) => (teams[i] ? teams[i].name + ' ' + w : '')).filter(Boolean).join(' – ')}</div>`;
+  }
+  app.innerHTML = `
+    <div class="screen">
+      <div class="header-icons">
+        <button class="icon-btn" onclick="showMenu()">☰</button>
+        <span></span>
+        <div>
+          <button class="icon-btn" onclick="editNames()">✎</button>
+          <button class="icon-btn" onclick="undo()">↩</button>
+        </div>
+      </div>
+      ${tally}
+      <div class="scores-row" style="flex-wrap:wrap; justify-content:center;">
+        ${teams.map((t, i) => {
+          const isActive = i === state.currentTeam;
+          const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
+          const playerName = (t.players && t.players[0]) ? t.players[0].name : '';
+          return `
+          <div class="score-card ${isActive ? 'active' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
+            <div class="score">${t.score}</div>
+            <div class="last-shots">Last Shots</div>
+            ${missHtml}
+            ${isActive && playerName ? `<div style="font-size:18px; font-weight:700; margin:6px 0;">${playerName}</div>` : ''}
+            <div class="team-name">${t.name}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="numpad">
+        <div class="numpad-grid">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n => `<button class="num-btn" onclick="score(${n})">${n}</button>`).join('')}
+        </div>
+        <button class="miss-btn" onclick="score(0)">MISS</button>
+      </div>
+    </div>
+  `;
+}
+  const teams = state.teams;
+  let tally = '';
+  if (state.rematchActive && state.wins.length) {
+    tally = `<div class="tally">Series: ${state.wins.map((w,i) => teams[i].name + ' ' + w).join(' – ')}</div>`;
+  }
+  app.innerHTML = `
+    <div class="screen">
+      <div class="header-icons">
+        <button class="icon-btn" onclick="showMenu()">☰</button>
+        <span></span>
+        <div>
+          <button class="icon-btn" onclick="editNames()">✎</button>
+          <button class="icon-btn" onclick="undo()">↩</button>
+        </div>
+      </div>
+      ${tally}
+      <div class="scores-row" style="flex-wrap:wrap; justify-content:center;">
+        ${teams.map((t, i) => {
+          const isActive = i === state.currentTeam;
+          const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
+          const playerName = (t.players && t.players[0]) ? t.players[0].name : '';
+          return `
+          <div class="score-card ${isActive ? 'active' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
+            <div class="score">${t.score}</div>
+            <div class="last-shots">Last Shots</div>
+            ${missHtml}
+            ${isActive && playerName ? `<div style="font-size:18px; font-weight:700; margin:6px 0;">${playerName}</div>` : ''}
+            <div class="team-name">${t.name}</div>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="numpad">
+        <div class="numpad-grid">
+          ${[1,2,3,4,5,6,7,8,9,10,11,12].map(n => `<button class="num-btn" onclick="score(${n})">${n}</button>`).join('')}
+        </div>
+        <button class="miss-btn" onclick="score(0)">MISS</button>
+      </div>
+    </div>
+  `;
+}
   const teams = state.teams;
   let tally = '';
   if (state.rematchActive) {
@@ -239,7 +325,8 @@ function eliminate(idx) {
 function win(idx) {
   state.gameOver = true;
   state.winner = idx;
-  state.wins[idx]++;
+  if (!state.wins.length) state.wins = Array(state.teams.length).fill(0);
+  state.wins[idx] = (state.wins[idx] || 0) + 1;
   saveState();
   renderEnd();
 }
@@ -276,6 +363,18 @@ function renderEnd() {
 
 function rematch() {
   state.rematchActive = true;
+  if (!state.wins.length) state.wins = Array(state.teams.length).fill(0);
+  state.teams.forEach(t => {
+    t.score = 0; t.strikes = 0; t.throws = 0; t.points = []; t.lastShots = []; t.eliminated = false;
+  });
+  state.currentTeam = 0;
+  state.history = [];
+  state.gameOver = false;
+  state.winner = null;
+  saveState();
+  render();
+}
+  state.rematchActive = true;
   state.teams.forEach(t => {
     t.score = 0; t.strikes = 0; t.throws = 0; t.points = []; t.lastShots = []; t.eliminated = false;
   });
@@ -303,7 +402,25 @@ function editNames() {
   render();
 }
 
-function toggleTheme() {
+function toggleTheme() {} // removed
+
+// init
+loadState();
+render();
+
+// expose
+window.continueGame = continueGame;
+window.newGame = newGame;
+window.addPlayer = addPlayer;
+window.removePlayer = removePlayer;
+window.addTeam = addTeam;
+window.startGame = startGame;
+window.score = score;
+window.undo = undo;
+window.rematch = rematch;
+window.renderHome = renderHome;
+window.showMenu = showMenu;
+window.editNames = editNames;
   state.dark = !state.dark;
   saveState();
   render();
