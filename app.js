@@ -166,7 +166,11 @@ function renderGame() {
   const teams = state.teams;
   let tally = '';
   if (state.rematchActive && state.wins.length) {
-    tally = `<div class="tally">Series: ${state.wins.map((w,i) => (teams[i] ? teams[i].name + ' ' + w : '')).filter(Boolean).join(' – ')}</div>`;
+    const w1 = state.wins[0] || 0;
+    const w2 = state.wins[1] || 0;
+    const t1Bold = w1 > w2;
+    const t2Bold = w2 > w1;
+    tally = `<div class="tally" style="font-size:16px;">Series:&nbsp;&nbsp;Team 1&nbsp;&nbsp;<span style="font-size:${t1Bold ? '22px' : '16px'}; font-weight:${t1Bold ? '800' : '400'};">${w1}</span>&nbsp;&nbsp;v&nbsp;&nbsp;Team 2&nbsp;&nbsp;<span style="font-size:${t2Bold ? '22px' : '16px'}; font-weight:${t2Bold ? '800' : '400'};">${w2}</span></div>`;
   }
   const currentPlayerName = getPlayerName(state.currentTeam);
   app.innerHTML = `
