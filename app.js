@@ -118,7 +118,6 @@ function renderTeamSetup() {
       <datalist id="savedPlayers">
         ${state.savedPlayers.map(n => `<option value="${n}">`).join('')}
       </datalist>
-      ${state.teams.length < 6 ? `<button class="btn" onclick="addTeam()" style="margin:8px 0 16px;">+ Add New Team</button>` : ''}
       <button class="btn primary" onclick="startGame()" style="background:var(--sa-green); border-color:var(--sa-green); margin-top:8px;">START GAME</button>
     </div>
   `;
