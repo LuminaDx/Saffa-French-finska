@@ -136,14 +136,6 @@ function addPlayer(ti) {
   renderTeamSetup();
 }
 
-function addTeam() {
-  if (state.teams.length >= 2) return;
-  const n = state.teams.length + 1;
-  state.teams.push({ name: 'Team ' + n, players: [], score: 0, strikes: 0, throws: 0, points: [], lastShots: [] });
-  saveState();
-  renderTeamSetup();
-}
-
 function removePlayer(ti, pi) {
   state.teams[ti].players.splice(pi, 1);
   saveState();
@@ -357,16 +349,13 @@ function editNames() {
   render();
 }
 
-// init
 loadState();
 render();
 
-// expose
 window.continueGame = continueGame;
 window.newGame = newGame;
 window.addPlayer = addPlayer;
 window.removePlayer = removePlayer;
-window.addTeam = addTeam;
 window.startGame = startGame;
 window.score = score;
 window.undo = undo;

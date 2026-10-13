@@ -1,9 +1,8 @@
 {
   "name": "SaffaFrench Finska",
-  "short_name": "SaffaFrench Finska",
+  "short_name": "SaffaFrench",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#001489",
-  "icons": []
+  "theme_color": "#001489"
 }
