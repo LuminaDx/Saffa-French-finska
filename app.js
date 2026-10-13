@@ -127,8 +127,22 @@ function addPlayer(ti) {
   const input = document.getElementById('newp' + ti);
   const name = input.value.trim();
   if (!name) return;
+
+  // Check if already on the other team this game
+  const otherTeam = 1 - ti;
+  if (state.teams[otherTeam] && state.teams[otherTeam].players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    alert(name + ' is already on the other team this game.');
+    return;
+  }
+
+  // Check if already on this team
+  if (state.teams[ti].players.some(p => p.name.toLowerCase() === name.toLowerCase())) {
+    alert(name + ' is already on this team.');
+    return;
+  }
+
   state.teams[ti].players.push({ name });
-  if (!state.savedPlayers.includes(name)) {
+  if (!state.savedPlayers.some(n => n.toLowerCase() === name.toLowerCase())) {
     state.savedPlayers.push(name);
   }
   input.value = '';
