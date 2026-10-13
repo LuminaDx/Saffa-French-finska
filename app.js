@@ -169,7 +169,8 @@ function renderGame() {
   if (state.rematchActive && state.wins.length) {
     tally = `<div class="tally">Series: ${state.wins.map((w,i) => (teams[i] ? teams[i].name + ' ' + w : '')).filter(Boolean).join(' – ')}</div>`;
   }
-  const currentPlayerName = getCurrentPlayerName();
+  const currentPlayerName = getPlayerName(state.currentTeam);
+  const nextPlayerName = getPlayerName(1 - state.currentTeam);
   const nextTeam = 1 - state.currentTeam;
   app.innerHTML = `
     <div class="screen">
