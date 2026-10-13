@@ -32,15 +32,35 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .title { font-size: 48px; font-weight: 800; text-align: center; margin: 40px 0 8px; }
 .subtitle { text-align: center; font-size: 18px; color: var(--muted); margin-bottom: 30px; }
 
-.pins-container { flex: 1; display: flex; align-items: center; justify-content: center; margin: 20px 0; }
-.pins { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-.pin-row { display: flex; gap: 8px; }
-.pin { width: 52px; height: 52px; border: 2.5px solid var(--text); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
-
-.bottom-buttons { margin-top: auto; }
-.btn { display: block; width: 100%; padding: 16px; margin: 10px 0; border: 2.5px solid var(--text); border-radius: 40px; background: transparent; color: var(--text); font-size: 18px; font-weight: 600; text-align: center; cursor: pointer; }
-.btn.primary { background: var(--french-blue); color: #fff; border-color: var(--french-blue); }
-body.dark .btn.primary { background: var(--sa-green); border-color: var(--sa-green); }
+.pins-container { 
+  flex: 1; 
+  display: flex; 
+  align-items: center; 
+  justify-content: center; 
+  margin: 20px 0; 
+  position: relative;
+  background: radial-gradient(circle at 50% 40%, rgba(255,184,28,0.08), transparent 50%),
+              radial-gradient(circle at 30% 70%, rgba(0,122,83,0.06), transparent 45%),
+              radial-gradient(circle at 70% 75%, rgba(0,122,83,0.06), transparent 45%);
+}
+.pins { display: flex; flex-direction: column; align-items: center; gap: 8px; position: relative; z-index: 1; }
+.pin-row { display: flex; gap: 10px; }
+.pin { 
+  width: 54px; height: 54px; 
+  border: 2.5px solid #222; 
+  border-radius: 50%; 
+  display: flex; align-items: center; justify-content: center; 
+  font-weight: 700; font-size: 18px; 
+  background: #fff;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.btn { 
+  display: block; width: 100%; padding: 16px; margin: 10px 0; 
+  border: 2.5px solid var(--french-blue); border-radius: 40px; 
+  background: transparent; color: var(--french-blue); 
+  font-size: 18px; font-weight: 600; text-align: center; cursor: pointer; 
+}
+.btn.primary { background: var(--sa-green); color: #fff; border-color: var(--sa-green); }
 
 .scores-row { display: flex; gap: 12px; margin: 10px 0 30px; }
 .score-card { flex: 1; background: var(--card-bg); border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
