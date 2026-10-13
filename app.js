@@ -169,8 +169,6 @@ function renderGame() {
     tally = `<div class="tally">Series: ${state.wins.map((w,i) => (teams[i] ? teams[i].name + ' ' + w : '')).filter(Boolean).join(' – ')}</div>`;
   }
   const currentPlayerName = getPlayerName(state.currentTeam);
-  const nextPlayerName = getPlayerName(1 - state.currentTeam);
-  const nextTeam = 1 - state.currentTeam;
   app.innerHTML = `
     <div class="screen">
       <div class="header-icons">
@@ -185,11 +183,13 @@ function renderGame() {
       <div class="scores-row" style="flex-wrap:wrap; justify-content:center;">
         ${teams.map((t, i) => {
           const isActive = i === state.currentTeam;
-          const isNext = i === nextTeam;
+          const isLeft = i === 0;
           const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
           const playerName = isActive ? (currentPlayerName || t.name) : '';
+          const cardClass = isLeft ? 'team-left' : 'team-right';
+          const activeClass = isActive ? 'active-frame' : '';
           return `
-          <div class="score-card ${isActive ? 'active' : ''} ${isNext ? 'next' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
+          <div class="score-card ${cardClass} ${activeClass}" style="min-width:140px; max-width:180px; margin:6px;">
             <div class="score">${t.score}</div>
             <div class="last-shots">Last Shots</div>
             ${missHtml}
@@ -220,7 +220,6 @@ function score(points) {
     playerIndex: [...state.playerIndex]
   })));
 
-  // Score goes ONLY to the current (green) team
   team.throws++;
   team.points.push(points);
   team.lastShots = (team.lastShots || []).slice(-2).concat(points);
@@ -242,7 +241,6 @@ function score(points) {
     }
   }
 
-  // After scoring, advance this team's player then switch teams
   if (team.players.length) {
     state.playerIndex[ti] = (state.playerIndex[ti] + 1) % team.players.length;
   }
