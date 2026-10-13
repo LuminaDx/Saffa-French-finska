@@ -157,9 +157,10 @@ function startGame() {
 
 function getCurrentPlayerName() {
   const team = state.teams[state.currentTeam];
-  if (!team || !team.players.length) return '';
-  const idx = state.playerIndex[state.currentTeam] % team.players.length;
-  return team.players[idx].name;
+  if (!team) return '';
+  if (!team.players || !team.players.length) return team.name || '';
+  const idx = (state.playerIndex[state.currentTeam] || 0) % team.players.length;
+  return team.players[idx].name || team.name || '';
 }
 
 function renderGame() {
@@ -186,13 +187,13 @@ function renderGame() {
           const isActive = i === state.currentTeam;
           const isNext = i === nextTeam;
           const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
-          const playerName = isActive ? currentPlayerName : '';
+          const playerName = isActive ? (currentPlayerName || t.name) : '';
           return `
           <div class="score-card ${isActive ? 'active' : ''} ${isNext ? 'next' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
             <div class="score">${t.score}</div>
             <div class="last-shots">Last Shots</div>
             ${missHtml}
-            ${isActive && playerName ? `<div style="font-size:18px; font-weight:700; margin:6px 0;">${playerName}</div>` : ''}
+            ${isActive ? `<div style="font-size:18px; font-weight:700; margin:6px 0; color:#111;">${playerName}</div>` : ''}
             <div class="team-name">${t.name}</div>
           </div>`;
         }).join('')}
