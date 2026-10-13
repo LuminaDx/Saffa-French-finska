@@ -138,7 +138,7 @@ function addPlayer(ti) {
 }
 
 function addTeam() {
-  if (state.teams.length >= 6) return;
+  if (state.teams.length >= 2) return;
   const n = state.teams.length + 1;
   state.teams.push({ name: 'Team ' + n, players: [], score: 0, strikes: 0, throws: 0, points: [], lastShots: [] });
   saveState();
