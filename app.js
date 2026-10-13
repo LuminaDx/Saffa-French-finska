@@ -53,10 +53,10 @@ function renderHome() {
       <div class="subtitle">Keep track of your games!</div>
       <div class="pins-container">
         <div class="pins">
-          <div class="pin-row"><div class="pin">7</div><div class="pin" style="border-color:var(--sa-gold)">9</div><div class="pin">8</div></div>
-          <div class="pin-row"><div class="pin">5</div><div class="pin" style="border-color:var(--sa-green)">11</div><div class="pin" style="border-color:var(--sa-gold)">12</div><div class="pin">6</div></div>
-          <div class="pin-row"><div class="pin" style="border-color:var(--sa-green)">3</div><div class="pin">10</div><div class="pin" style="border-color:var(--sa-gold)">4</div></div>
-          <div class="pin-row"><div class="pin" style="border-color:var(--sa-green)">1</div><div class="pin" style="border-color:var(--sa-gold)">2</div></div>
+          <div class="pin-row"><div class="pin">7</div><div class="pin gold">9</div><div class="pin">8</div></div>
+          <div class="pin-row"><div class="pin">5</div><div class="pin green">11</div><div class="pin gold">12</div><div class="pin">6</div></div>
+          <div class="pin-row"><div class="pin green">3</div><div class="pin">10</div><div class="pin gold">4</div></div>
+          <div class="pin-row"><div class="pin green">1</div><div class="pin gold">2</div></div>
         </div>
       </div>
       <div class="bottom-buttons">
@@ -188,7 +188,7 @@ function renderGame() {
   }
   const currentPlayerName = getPlayerName(state.currentTeam);
   app.innerHTML = `
-    <div class="screen">
+    <div class="screen game">
       <div class="header-icons">
         <button class="icon-btn" onclick="showMenu()">☰</button>
         <span></span>
