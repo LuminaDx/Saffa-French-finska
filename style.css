@@ -25,29 +25,11 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 #app { max-width: 420px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 .screen {
-  background: linear-gradient(160deg, 
-    #1B3838 0%,
-    #1B3838 35%,
-    #001C5B 40%,
-    #001C5B 75%,
-    #C82828 80%,
-    #FFB302 90%,
-    #FFB302 100%);
   min-height: 100vh;
   padding: 20px 16px 40px;
   display: flex;
   flex-direction: column;
 }
-
-.screen.game {
-  background: linear-gradient(160deg, 
-    #1B3838 0%,
-    #1B3838 35%,
-    #001C5B 40%,
-    #001C5B 75%,
-    #C82828 80%,
-    #FFB302 90%,
-    #FFB302 100%);
 }
 
 .theme-toggle { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 22px; cursor: pointer; }
