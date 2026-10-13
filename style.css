@@ -123,3 +123,43 @@ body.dark .tally { color: var(--sa-gold); }
 .add-player { margin: 10px 0; }
 .add-player input { width: 70%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
 .add-player button { padding: 10px 16px; }
+
+.series-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px 0 16px;
+  padding: 0 4px;
+}
+.series-team {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.series-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: #333;
+}
+.series-score {
+  font-size: 22px;
+  font-weight: 800;
+  color: #fff;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.series-score.team1 { background: #1B3838; }
+.series-score.team2 { background: #001C5B; }
+.series-vs {
+  font-size: 16px;
+  font-weight: 700;
+  color: #666;
+  flex: 0 0 auto;
+}
