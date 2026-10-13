@@ -321,7 +321,17 @@ function renderEnd() {
   app.innerHTML = `
     <div class="screen" style="text-align:center;">
       <h1 style="font-size:36px; margin:40px 0 10px;">${w ? 'VICTORY!' : 'GAME OVER'}</h1>
-      ${state.rematchActive && state.wins.length ? `<div class="tally">Series: ${state.wins.map((w,i) => state.teams[i] ? state.teams[i].name + ' ' + w : '').filter(Boolean).join(' – ')}</div>` : ''}
+      ${state.rematchActive && state.wins.length ? `<div class="series-row">
+        <div class="series-team">
+          <span class="series-label">Team 1</span>
+          <span class="series-score team1">${state.wins[0] || 0}</span>
+        </div>
+        <div class="series-vs">v</div>
+        <div class="series-team">
+          <span class="series-label">Team 2</span>
+          <span class="series-score team2">${state.wins[1] || 0}</span>
+        </div>
+      </div>` : ''}
       <div class="scores-row" style="margin-top:20px; flex-wrap:wrap; justify-content:center; align-items:flex-end;">
         ${state.teams.map((t, i) => {
           const isWinner = i === state.winner;
