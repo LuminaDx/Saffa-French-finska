@@ -13,14 +13,37 @@ let state = {
   savedPlayers: JSON.parse(localStorage.getItem('finskaPlayers') || '[]')
 };
 
+function savePlayers() {
+  try {
+    localStorage.setItem('finskaPlayers', JSON.stringify(state.savedPlayers));
+    localStorage.setItem('finskaPlayersBackup', JSON.stringify(state.savedPlayers));
+    document.cookie = 'finskaPlayers=' + encodeURIComponent(JSON.stringify(state.savedPlayers)) + '; path=/; max-age=31536000; SameSite=Lax';
+  } catch(e) {}
+}
+
+function loadPlayers() {
+  try {
+    let players = localStorage.getItem('finskaPlayers') || localStorage.getItem('finskaPlayersBackup');
+    if (!players) {
+      const match = document.cookie.match(/finskaPlayers=([^;]+)/);
+      if (match) players = decodeURIComponent(match[1]);
+    }
+    state.savedPlayers = JSON.parse(players || '[]');
+  } catch(e) {
+    state.savedPlayers = [];
+  }
+}
+
 function saveState() {
-  localStorage.setItem('saffaFrenchFinska', JSON.stringify({
-    mode: state.mode, teams: state.teams, currentTeam: state.currentTeam,
-    playerIndex: state.playerIndex,
-    history: state.history, gameOver: state.gameOver, winner: state.winner,
-    wins: state.wins, rematchActive: state.rematchActive
-  }));
-  localStorage.setItem('finskaPlayers', JSON.stringify(state.savedPlayers));
+  try {
+    localStorage.setItem('saffaFrenchFinska', JSON.stringify({
+      mode: state.mode, teams: state.teams, currentTeam: state.currentTeam,
+      playerIndex: state.playerIndex,
+      history: state.history, gameOver: state.gameOver, winner: state.winner,
+      wins: state.wins, rematchActive: state.rematchActive
+    }));
+    savePlayers();
+  } catch(e) {}
 }
 
 function loadState() {
@@ -31,9 +54,12 @@ function loadState() {
       Object.assign(state, s);
     } catch(e) {}
   }
-  state.savedPlayers = JSON.parse(localStorage.getItem('finskaPlayers') || localStorage.getItem('finskaPlayersBackup') || '[]');
+  loadPlayers();
   if (!Array.isArray(state.playerIndex)) state.playerIndex = [0, 0];
 }
+
+window.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') savePlayers(); });
+window.addEventListener('pagehide', savePlayers);
 
 function render() {
   if (!state.mode || (state.gameOver && !state.rematchActive)) {
