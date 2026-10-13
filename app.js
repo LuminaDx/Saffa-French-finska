@@ -135,9 +135,12 @@ function renderTeamSetup() {
               </div>
             `).join('')}
             <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
-              <input id="newp${ti}" placeholder="Add player name" list="savedPlayers" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:16px;">
+              <input id="newp${ti}" placeholder="Add player name" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:16px;">
               <button onclick="addPlayer(${ti})" style="padding:12px 20px; background:var(--french-blue); color:#fff; border:none; border-radius:10px; font-weight:600;">Add</button>
             </div>
+            ${state.savedPlayers.length ? `<div style="margin-top:10px; display:flex; flex-wrap:wrap; gap:6px;">
+              ${state.savedPlayers.map(n => `<button onclick="document.getElementById('newp${ti}').value='${n.replace(/'/g,"\\'")}'; addPlayer(${ti});" style="padding:6px 12px; background:#f0f0f0; border:1px solid #ddd; border-radius:20px; font-size:14px;">${n}</button>`).join('')}
+            </div>` : ''}
           </div>
         </div>
       `).join('')}
