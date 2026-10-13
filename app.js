@@ -86,33 +86,36 @@ function newGame() {
 function renderTeamSetup() {
   app.innerHTML = `
     <div class="screen">
-      <div class="header-icons">
-        <button class="icon-btn" onclick="renderHome()">←</button>
-        <span style="font-weight:700; font-size:20px;">Setup Teams</span>
+      <div class="header-icons" style="margin-bottom:16px;">
+        <button class="icon-btn" onclick="renderHome()" style="font-size:24px;">←</button>
+        <span style="font-weight:700; font-size:22px; color:var(--french-blue);">Setup Teams</span>
         <span></span>
       </div>
       ${state.teams.map((team, ti) => `
-        <div style="margin:20px 0; padding:12px; border:1.5px solid var(--sa-gold); border-radius:12px;">
-          <h3 style="margin:0 0 10px; color:var(--french-blue);">${team.name}</h3>
-          <div class="player-list">
+        <div style="margin:16px 0 24px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <div style="width:32px; height:32px; background:var(--french-blue); color:#fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:700;">${ti+1}</div>
+            <h3 style="margin:0; color:var(--french-blue); font-size:18px;">${team.name}</h3>
+          </div>
+          <div style="border:1.5px solid var(--sa-gold); border-radius:14px; padding:12px; background:#fff;">
             ${team.players.map((p, pi) => `
-              <div class="player-item">
+              <div style="display:flex; justify-content:space-between; align-items:center; padding:10px 4px; border-bottom:1px solid #eee;">
                 <span>👤 ${p.name}</span>
-                <button onclick="removePlayer(${ti},${pi})" style="background:none;border:none;font-size:18px;">✕</button>
+                <button onclick="removePlayer(${ti},${pi})" style="background:none;border:none;font-size:18px;color:#999;">✕</button>
               </div>
             `).join('')}
-          </div>
-          <div class="add-player" style="display:flex;gap:8px;margin-top:8px;">
-            <input id="newp${ti}" placeholder="Add player name" list="savedPlayers" style="flex:1;padding:10px;border-radius:8px;border:1px solid #ccc;">
-            <button onclick="addPlayer(${ti})" style="padding:10px 16px;background:var(--french-blue);color:#fff;border:none;border-radius:8px;">Add</button>
+            <div style="display:flex; gap:8px; margin-top:12px; align-items:center;">
+              <input id="newp${ti}" placeholder="Add player name" list="savedPlayers" style="flex:1; padding:12px; border-radius:10px; border:1px solid #ddd; font-size:16px;">
+              <button onclick="addPlayer(${ti})" style="padding:12px 20px; background:var(--french-blue); color:#fff; border:none; border-radius:10px; font-weight:600;">Add</button>
+            </div>
           </div>
         </div>
       `).join('')}
       <datalist id="savedPlayers">
         ${state.savedPlayers.map(n => `<option value="${n}">`).join('')}
       </datalist>
-      ${state.teams.length < 6 ? `<button class="btn" onclick="addTeam()" style="margin:10px 0;">+ Add New Team</button>` : ''}
-      <button class="btn primary" onclick="startGame()" style="margin-top:16px;background:var(--sa-green);border-color:var(--sa-green);">START GAME</button>
+      ${state.teams.length < 6 ? `<button class="btn" onclick="addTeam()" style="margin:8px 0 16px;">+ Add New Team</button>` : ''}
+      <button class="btn primary" onclick="startGame()" style="background:var(--sa-green); border-color:var(--sa-green); margin-top:8px;">START GAME</button>
     </div>
   `;
 }
