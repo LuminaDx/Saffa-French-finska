@@ -146,8 +146,9 @@ function startGame() {
   state.teams.forEach(t => {
     if (t.players.length === 0) t.players.push({ name: t.name });
   });
-  state.currentTeam = 0;
-  state.playerIndex = [0, 0];
+  // Random starting team + random player on that team
+  state.currentTeam = Math.floor(Math.random() * state.teams.length);
+  state.playerIndex = state.teams.map(t => Math.floor(Math.random() * Math.max(1, t.players.length)));
   state.history = [];
   state.gameOver = false;
   saveState();
@@ -168,6 +169,7 @@ function renderGame() {
     tally = `<div class="tally">Series: ${state.wins.map((w,i) => (teams[i] ? teams[i].name + ' ' + w : '')).filter(Boolean).join(' – ')}</div>`;
   }
   const currentPlayerName = getCurrentPlayerName();
+  const nextTeam = 1 - state.currentTeam;
   app.innerHTML = `
     <div class="screen">
       <div class="header-icons">
@@ -182,10 +184,11 @@ function renderGame() {
       <div class="scores-row" style="flex-wrap:wrap; justify-content:center;">
         ${teams.map((t, i) => {
           const isActive = i === state.currentTeam;
+          const isNext = i === nextTeam;
           const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
           const playerName = isActive ? currentPlayerName : '';
           return `
-          <div class="score-card ${isActive ? 'active' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
+          <div class="score-card ${isActive ? 'active' : ''} ${isNext ? 'next' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
             <div class="score">${t.score}</div>
             <div class="last-shots">Last Shots</div>
             ${missHtml}
@@ -237,7 +240,6 @@ function score(points) {
     }
   }
 
-  // Advance this team's player, then switch teams
   if (team.players.length) {
     state.playerIndex[ti] = (state.playerIndex[ti] + 1) % team.players.length;
   }
@@ -291,8 +293,14 @@ function renderEnd() {
     <div class="screen" style="text-align:center;">
       <h1 style="font-size:36px; margin:40px 0 10px;">${w ? 'VICTORY!' : 'GAME OVER'}</h1>
       ${state.rematchActive && state.wins.length ? `<div class="tally">Series: ${state.wins.map((w,i) => state.teams[i] ? state.teams[i].name + ' ' + w : '').filter(Boolean).join(' – ')}</div>` : ''}
-      <div class="scores-row" style="margin-top:20px; flex-wrap:wrap; justify-content:center;">
-        ${state.teams.map(t => `<div class="score-card" style="margin:6px;"><div class="score">${t.score}</div><div class="team-name">${t.name}</div></div>`).join('')}
+      <div class="scores-row" style="margin-top:20px; flex-wrap:wrap; justify-content:center; align-items:flex-end;">
+        ${state.teams.map((t, i) => {
+          const isWinner = i === state.winner;
+          return `<div class="score-card ${isWinner ? 'winner' : ''}" style="margin:6px;">
+            <div class="score" style="${isWinner ? 'font-size:88px;' : ''}">${t.score}</div>
+            <div class="team-name">${t.name}</div>
+          </div>`;
+        }).join('')}
       </div>
       <button class="btn primary" onclick="rematch()">REMATCH</button>
       <button class="btn" onclick="newGame()">NEW GAME</button>
@@ -307,8 +315,10 @@ function rematch() {
   state.teams.forEach(t => {
     t.score = 0; t.strikes = 0; t.throws = 0; t.points = []; t.lastShots = []; t.eliminated = false;
   });
-  state.currentTeam = 0;
-  state.playerIndex = [0, 0];
+  // Losing team starts; random player from that team
+  const loser = state.winner === 0 ? 1 : 0;
+  state.currentTeam = loser;
+  state.playerIndex = state.teams.map(t => Math.floor(Math.random() * Math.max(1, t.players.length)));
   state.history = [];
   state.gameOver = false;
   state.winner = null;

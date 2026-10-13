@@ -66,6 +66,9 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .score-card { flex: 1; background: var(--card-bg); border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
 .score-card.active { background: var(--active-bg); }
 .score-card.active .score { color: var(--sa-green); }
+.score-card.next { background: #e8eaf6; border: 2px solid var(--french-blue); }
+.score-card.winner { background: #e8f5e9; border: 3px solid var(--sa-green); transform: scale(1.08); }
+.score-card.winner .score { color: var(--sa-green); }
 body.dark .score-card.active .score { color: var(--sa-gold); }
 .last-shots { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .score { font-size: 64px; font-weight: 800; line-height: 1; }
