@@ -10,6 +10,15 @@
   --border: #ddd;
 }
 
+body.dark {
+  --bg: #111;
+  --text: #fff;
+  --muted: #aaa;
+  --card-bg: #222;
+  --active-bg: #1b3a1b;
+  --border: #333;
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
 
 body { background: var(--bg); color: var(--text); min-height: 100vh; }
@@ -17,6 +26,8 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 #app { max-width: 420px; margin: 0 auto; min-height: 100vh; position: relative; }
 
 .screen { padding: 20px 16px 40px; min-height: 100vh; display: flex; flex-direction: column; }
+
+.theme-toggle { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 22px; cursor: pointer; }
 
 .title { font-size: 48px; font-weight: 800; text-align: center; margin: 40px 0 8px; }
 .subtitle { text-align: center; font-size: 18px; color: var(--muted); margin-bottom: 30px; }
@@ -43,8 +54,6 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
   background: #fff;
   box-shadow: 0 2px 4px rgba(0,0,0,0.06);
 }
-
-.bottom-buttons { margin-top: auto; }
 .btn { 
   display: block; width: 100%; padding: 16px; margin: 10px 0; 
   border: 2.5px solid var(--french-blue); border-radius: 40px; 
@@ -57,10 +66,12 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .score-card { flex: 1; background: var(--card-bg); border-radius: 16px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.08); position: relative; }
 .score-card.active { background: var(--active-bg); }
 .score-card.active .score { color: var(--sa-green); }
+body.dark .score-card.active .score { color: var(--sa-gold); }
 .last-shots { font-size: 13px; color: var(--muted); margin-bottom: 8px; }
 .score { font-size: 64px; font-weight: 800; line-height: 1; }
 .team-name { margin-top: 12px; padding: 8px 12px; background: #f0f0f0; border-radius: 20px; font-weight: 600; display: inline-block; }
 .score-card.active .team-name { background: #c8e6c9; }
+.strikes { margin: 8px 0; font-size: 18px; color: #e53935; }
 
 .header-icons { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
 .icon-btn { background: none; border: none; font-size: 22px; cursor: pointer; padding: 8px; }
@@ -72,3 +83,13 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .miss-btn { width: 180px; margin: 10px auto 0; padding: 14px; border: 2.5px solid var(--text); border-radius: 40px; background: transparent; font-size: 20px; font-weight: 700; cursor: pointer; display: block; }
 
 .tally { text-align: center; margin: 8px 0; font-weight: 600; color: var(--sa-green); }
+body.dark .tally { color: var(--sa-gold); }
+
+.modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 100; }
+.modal-content { background: var(--bg); border-radius: 16px; padding: 24px; max-width: 90%; max-height: 85vh; overflow-y: auto; }
+
+.player-list { margin: 10px 0; }
+.player-item { display: flex; justify-content: space-between; align-items: center; padding: 10px; border-bottom: 1px solid var(--border); }
+.add-player { margin: 10px 0; }
+.add-player input { width: 70%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; }
+.add-player button { padding: 10px 16px; }
