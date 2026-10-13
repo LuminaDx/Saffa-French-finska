@@ -187,13 +187,13 @@ function renderGame() {
           const isActive = i === state.currentTeam;
           const isNext = i === nextTeam;
           const missHtml = t.strikes > 0 ? `<div style="color:#e53935; font-size:20px; margin:4px 0;">${'✕'.repeat(t.strikes)}</div>` : '';
-          const playerName = isActive ? (currentPlayerName || t.name) : (isNext ? (nextPlayerName || t.name) : '');
+          const playerName = isActive ? (currentPlayerName || t.name) : '';
           return `
           <div class="score-card ${isActive ? 'active' : ''} ${isNext ? 'next' : ''}" style="min-width:140px; max-width:180px; margin:6px;">
             <div class="score">${t.score}</div>
             <div class="last-shots">Last Shots</div>
             ${missHtml}
-            ${playerName ? `<div style="font-size:18px; font-weight:700; margin:6px 0; color:#111;">${playerName}</div>` : ''}
+            ${isActive && playerName ? `<div style="font-size:18px; font-weight:700; margin:6px 0; color:#111;">${playerName}</div>` : ''}
             <div class="team-name">${t.name}</div>
           </div>`;
         }).join('')}
